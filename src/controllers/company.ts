@@ -1,7 +1,6 @@
 import {Request, Response} from 'express';
-import { clientModel } from '../models/clients';
 import {Company, companyModel} from '../models/company';
-import { badRequest, internalServerError } from '../services/util';
+import { badRequest, internalServerError, notFound } from '../services/util';
 
 const insertCompany = async (req: Request, res: Response) => {
 
@@ -49,12 +48,71 @@ const insertCompany = async (req: Request, res: Response) => {
         .catch(err => internalServerError(res, err))
 }
 
+const updateCompany = async (req: Request, res: Response) => {
+    const id = parseInt(req.params.id);
+    {
+        if(!(id > 0))
+            return badRequest(res, 'ID INVÁLIDO')
+
+        const company = req.body;
+
+        if(!company)
+            return badRequest(res, 'Empresa inválido!')
+            
+        if(!company.name)
+            return badRequest(res, "Nome não informado!")
+
+        if(!company.email)
+            return badRequest(res, "Email não informado!")
+
+        if(!company.cnpj)
+            return badRequest(res, "Cnpj não informado!")
+
+        if(!company.tel)
+            return badRequest(res, "Telefone não informado!")
+
+        if(!company.endereco)
+            return badRequest(res, "Endereço não informado!")
+
+        if(!company.pass)
+            return badRequest(res, "Senha não informada!")
+
+        const companySaved = await companyModel.getCompany(id)
+        
+        if(!companySaved)
+            return notFound(res);
+    }
+
+    const company = req.body as Company;
+    return companyModel.updateCompany(company)
+        .then(company => {
+            res.json(company)
+        })
+        .catch(err => internalServerError(res, err))
+}
+
 const listCompany = ({}: Request, res: Response) => {
     companyModel.listCompany()
         .then(company => {
             res.json(company)
         })
         .catch(err => internalServerError(res,err))
+}
+
+const getCompany = (req: Request, res: Response) => {
+    const id = parseInt(req.params.id);
+    {
+        if(!(id > 0))
+            return badRequest(res, 'ID INVÁLIDO!');
+    }
+    return companyModel.getCompany(id)
+        .then((company) => {
+            if(company)
+                return res.json(company);
+            else
+                return notFound(res);
+        })
+        .catch(err => internalServerError(res, err));
 }
 
 const getLogin = (req: Request, res: Response) => {
@@ -85,6 +143,10 @@ const deleteCompany = async (req:Request, res: Response) => {
     {
         if(!(id>0))
             return badRequest(res, "ID INVALIDO!")
+        
+        const companySaved = await companyModel.getCompany(id);
+            if(!companySaved)
+                return notFound(res);
     }
 
     return companyModel.deleteCompany(id)
@@ -96,7 +158,9 @@ const deleteCompany = async (req:Request, res: Response) => {
 
 export const companyController = {
     insertCompany,
+    updateCompany,
     listCompany,
+    getCompany,
     getLogin,
     deleteCompany,
 }
