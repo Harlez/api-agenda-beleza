@@ -32,6 +32,41 @@ const insertHour = (req: Request, res: Response) => {
         .catch(err => internalServerError(res, err))
 }
 
+const updateHour = async (req: Request, res: Response) => {
+    const id = parseInt(req.params.id);
+    {
+        if(!(id > 0))
+            return badRequest(res, 'ID Inválido')
+        
+        const freehour = req.body;
+
+        if(!freehour.id_company)
+        return badRequest(res, "Salão inválido")
+
+        if(!freehour.from_hour)
+            return badRequest(res, 'Hora inicial inválido')
+
+        if(!freehour.to_hour)
+            return badRequest(res, 'Hora final inválido')
+
+        if(!freehour.week_day)
+            return badRequest(res, 'Dia da semana inválido')
+        
+        const hourSaved = await freeHoursModel.getHour(id)
+        
+        if(!hourSaved)
+            return notFound(res);
+    }
+
+    const freehour = req.body as FreeHours;
+    return freeHoursModel.updateHour(freehour)
+        .then(freeHour => {
+            res.json(freeHour)
+        })
+        .catch(err => internalServerError(res, err))
+}
+
+
 const listHours = ({}: Request, res: Response) => {
     freeHoursModel.listHours()
         .then(hours => {
@@ -92,6 +127,7 @@ const deleteFreeHours = async (req: Request, res: Response) => {
 
 export const freeHoursController = {
     insertHour,
+    updateHour,
     listHours,
     getHour,
     getHourCompany,
