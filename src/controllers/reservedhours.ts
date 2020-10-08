@@ -1,6 +1,4 @@
 import {Request, Response} from 'express';
-import { parseIsolatedEntityName } from 'typescript';
-import { companyModel } from '../models/company';
 import {ReservedHours, reservedHoursModel} from '../models/reservedhours';
 import { badRequest, internalServerError, notFound } from '../services/util';
 
